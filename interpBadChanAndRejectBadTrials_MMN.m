@@ -15,7 +15,7 @@ if exist('basename','var') && ischar(basename)
 end
    
 for i = 1:length(basename)
-       filename = [basename{i} '_rej.set'];
+       filename = [basename{i} '_det.set'];
        EEG = pop_loadset('filename', filename, 'filepath', opt.indir);
 
 % badchannels = find(cell2mat({EEG.chanlocs.badchan}));

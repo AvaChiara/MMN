@@ -20,7 +20,7 @@ opt = finputcheck(varargin, {
     'indir' 'string' [] pwd;...
     'outdir' 'string' [] pwd;...
     'lpfreq' 'real' [] 30;...
-    'hpfreq' 'real' [] 1;...
+    'hpfreq' 'real' [] [];...
     'timewindow' 'real' [] [];...
     'showvalues' 'boolean' [] false;...
     });
@@ -63,30 +63,36 @@ for i = 1:length(basename)
         % lpfilter
         %lpfreq = 30;
         fprintf('Low-pass filtering above %dHz...\n',opt.lpfreq);
-        EEG = pop_eegfiltnew(EEG, [], opt.lpfreq, 66, 0, [], 0);
+        EEG = pop_eegfiltnew(EEG, [], opt.lpfreq, [], 0, [], 0);
 
         % hpfilter
         %hpfreq = 0.5;
-        fprintf('High-pass filtering below %dHz...\n',opt.hpfreq);
-        EEG = pop_eegfiltnew(EEG, [], opt.hpfreq, 3300, true, [], 0);
+        if ~isempty(opt.hpfreq)
+         fprintf('High-pass filtering below %dHz...\n',opt.hpfreq);
+         EEG = pop_eegfiltnew(EEG, [], opt.hpfreq, [], true, [], 0);
+        else 
+            disp('No high-pass filter')
+        end
         
 
         allevents = {EEG.event.type};
         selectevents = [];
         
         eventlist = unique(allevents);
+        ev_idx = ~contains(eventlist, '_5'); %identify markers that we are NOT interested in (everything but 5th tone)
+        eventlist(ev_idx) = []; %Remove them
         
         
-        rm = {'BEND', 'BGIN', 'boundary'}; %events we are not interested in
-        wrapper = @(x) strfind(eventlist,x);
-        whereStr = cellfun(wrapper, rm, 'UniformOutput', false);
-        
-        for q = 1:length(whereStr)
-            nomarkers{q} = find(~cellfun(@isempty,whereStr{q}));
-        end
-        
-        nomarkers = cell2mat(nomarkers);
-        eventlist(nomarkers) = []; %remove non interesting event markers
+%         rm = {'BEND', 'BGIN', 'boundary'}; %events we are not interested in
+%         wrapper = @(x) strfind(eventlist,x);
+%         whereStr = cellfun(wrapper, rm, 'UniformOutput', false);
+%         
+%         for q = 1:length(whereStr)
+%             nomarkers{q} = find(~cellfun(@isempty,whereStr{q}));
+%         end
+%         
+%         nomarkers = cell2mat(nomarkers);
+%         eventlist(nomarkers) = []; %remove non interesting event markers
         
         for e = 1:length(eventlist)
             selectevents = [selectevents find(strncmp(eventlist{e},allevents,length(eventlist{e})))];
@@ -111,7 +117,7 @@ for i = 1:length(basename)
     
 
         fprintf('removing basline.\n');
-        EEG = pop_rmbase( EEG, [-100    0]);
+        EEG = pop_rmbase( EEG, [-200 0]); %baseline relative to -200 before last sound
 
 
         if ischar(base)

@@ -33,11 +33,23 @@ function [EEG] = preprocess_manageBadTrials_MMN(EEG,opts, outdirectory)
 
 [BadTrlIdx,BadElecIdx] = preprocess_detectBadTrials(EEG,opts);
 
+%Remove if more than 5 bad channels contribute to rejection
+BadTrlOrig = BadTrlIdx;
+bad = BadElecIdx(:,BadTrlIdx);
+sumBad = sum(bad, 1);
+rm = find(sumBad > 5);
+BadTrlIdx(rm) = [];
+BadTrlIdx = unique([1:20 BadTrlIdx]); %Remove first 20 habituation trials
+
+
 if opts.reject 
     
     fprintf('<--------Summary------------->\n');
     fprintf('The following epochs have been marked for rejection after manual inspection \n');
-    fprintf([num2str(BadTrlIdx) '\n']);
+    fprintf([num2str(BadTrlOrig) '\n']);
+    fprintf('*********************************\n');
+    fprintf('The following %d epochs have been rejected after keeping marked epochs for which max 5 channels were responsible for rejection: \n', numel(BadTrlIdx(21:end))); 
+    fprintf([num2str(BadTrlIdx(21:end)) '\n']);
 
     if ~isempty(BadTrlIdx)
             EEG = pop_select(EEG, 'notrial', BadTrlIdx);
@@ -71,8 +83,8 @@ elseif opts.recon
        
 end
     EEG.filepath = outdirectory;
-    EEG.filename = [EEG.filename(1:end-4) 'Trials.set'];
-    EEG.setname = [EEG.filename(1:end-4) 'Trials'];
+    EEG.filename = [EEG.filename(1:end-10) 'trialsRej.set'];
+    EEG.setname = [EEG.filename(1:end-10) 'trialsRej'];
     fprintf('Saving set %s%s.\n',EEG.filepath,EEG.filename);
     pop_saveset(EEG,'filename', EEG.filename, 'filepath', EEG.filepath,'version','7.3');
 

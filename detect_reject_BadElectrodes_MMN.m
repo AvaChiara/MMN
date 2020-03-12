@@ -1,5 +1,5 @@
-function [EEG,indelec] = detectBadElectrodes_MMN(basename, varargin)
-% Detect bad electrodes but do not remove them:
+function [EEG,indelec] = detect_reject_BadElectrodes_MMN(basename, varargin)
+% Detect bad electrodes and removes:
 %
 % 'indir', val > [string] the directory containing the imported data
 % 'outdir', val > [string] with the directory where to save the data
@@ -24,21 +24,13 @@ end
         zerochan = find(var(chandata,0,2) < 0.5); %Remove zero channels from spec..
         disp('Zero activity channels were detected: Loading results');
         fprintf('--> Channel %d \n',zerochan);
-        
-        %CHI: If there is a zero activity channel that is not ref (because dead)
-        %remove from calculation of spectrum and add directly to rejected
-        %electrodes
-        if zerochan > 1
-           not_Ref = find(zerochan ~= 93);
-           dead_elec = zerochan(not_Ref);
-        else
-           dead_elec = [];
-        end
-        %CHI***********
-        
         electrodes = setdiff(1:EEG.nbchan,zerochan);
-        [EEG, indelec, ~, ~] = priv_rejchan(EEG,'elec',electrodes , 'dead', dead_elec,'threshold',[-3.5 3.5],'norm','on','measure','spec' ,'freqrange',[1 48]);
-        EEG.reject.rejchan = [indelec dead_elec]; %CHI
+        [EEG, indelec, ~, ~] = priv_rejchan(EEG,'elec',electrodes ,'threshold',[-3.5 3.5],'norm','on','measure','spec' ,'freqrange',[1 48]);
+        EEG.reject.rejchan = indelec;
+        allelec = 1:size(EEG.data,1);
+        EEG.data(indelec,:,:) = []; %Remove bad channels
+        allelec(indelec) = [];
+        EEG.reject.goodchan = allelec; %keep list of good channels
 
         % inter
 

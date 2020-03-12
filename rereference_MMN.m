@@ -20,7 +20,7 @@ end
      
    
    for i = 1:length(basename)
-       filename = [basename{i} '_rejTrials.set'];
+       filename = [basename{i} '_trialsRej.set'];
        EEG = pop_loadset('filepath',opt.indir,'filename',filename);
 
 
