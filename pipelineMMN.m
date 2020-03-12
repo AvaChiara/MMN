@@ -70,6 +70,21 @@ end
 % Optional ICA decomposition here. Better to run on parallel %
 %************************************************************%
 
+%% Optional if more channels need to be interpolated after visual inspection
+clear EEG
+filename = 'DWNS_gloloc_82__pru'; %File in which extra bad channel
+chan = [17]; %number of bad channel. It can be a vector
+EEG = pop_loadset([filename '.set']);
+
+if ~isfield(EEG.reject, 'rejchan')
+    EEG.reject.rejchan = chan;
+elseif isfield(EEG.reject, 'rejchan') && isempty(EEG.reject.rejchan)
+    EEG.reject.rejchan = chan;
+elseif isfield(EEG.reject, 'rejchan') && ~isempty(EEG.reject.rejchan)
+    EEG.reject.rejchan = [EEG.reject.rejchan chan];
+end
+
+pop_saveset(EEG, [pru_dir filesep filename '.set'])
 %% Robust detrending
 %better to run this in parallel on slurm because it takes a long time
 

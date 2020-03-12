@@ -12,6 +12,7 @@ bcd_dir = [filepath filesep 'Analysis' filesep 'BadChannelsDetected']; %Bad chan
 rej_dir = [filepath filesep 'Analysis' filesep 'TrialsRejected']; %Interpolated channels and rejected trials directory
 ref_dir = [filepath filesep 'Analysis' filesep 'Rereferenced']; %Rereferenced directory
 pru_dir = [filepath filesep 'Analysis' filesep 'ICA_corrected']; %data with bad components removes
+det_dir = [filepath filesep 'Analysis' filesep 'Detrended'];
 
 % Get .mff directories names and extract basenames
 dirList_cntrl = get_directory_names([raw_dir filesep 'CONTROLS_RAW_DATA']);
@@ -69,9 +70,33 @@ end
 % Optional ICA decomposition here. Better to run on parallel %
 %************************************************************%
 
+%% Optional if more channels need to be interpolated after visual inspection
+clear EEG
+filename = 'DWNS_gloloc_82__pru'; %
+chan = [17];
+EEG = pop_loadset([filename '.set']);
+
+if ~isfield(EEG.reject, 'rejchan')
+    EEG.reject.rejchan = chan;
+elseif isfield(EEG.reject, 'rejchan') && isempty(EEG.reject.rejchan)
+    EEG.reject.rejchan = chan;
+elseif isfield(EEG.reject, 'rejchan') && ~isempty(EEG.reject.rejchan)
+    EEG.reject.rejchan = [EEG.reject.rejchan chan];
+end
+
+pop_saveset(EEG, [pru_dir filesep filename '.set'])
+%% Robust detrending
+%better to run this in parallel on slurm because it takes a long time
+
+for i = 1:length(basenames)
+    EEG = pop_loadset([pru_dir filesep basenames{i} '_pru.set']);
+    EEG = robust_locdetrend(EEG,'yes');
+    pop_saveset(EEG, 'filepath', det_dir, 'filename', [basenames{i} '_det.set']);
+end
+
 %% Interpolate bad channels and remove bad trials
 for i = 1:length(basenames)
-    interpBadChanAndRejectBadTrials_MMN(basenames{i}, 'indir', pru_dir, 'outdir', rej_dir)
+    interpBadChanAndRejectBadTrials_MMN(basenames{i}, 'indir', det_dir, 'outdir', rej_dir)
 end
 
 %% Rereference
