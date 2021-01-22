@@ -2,7 +2,7 @@
 
 (c) Chiara Avancini 2019
 
-This file contains a description of the data analysis pipeline for the P50 project and instructions on how to use the scripts.
+This file contains a description of the data analysis pipeline for the MMN project and instructions on how to use the scripts.
 
 ## Chiara's details
 Cam email: ca410@cam.ac.uk \
