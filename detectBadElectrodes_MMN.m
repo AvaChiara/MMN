@@ -25,19 +25,25 @@ end
         disp('Zero activity channels were detected: Loading results');
         fprintf('--> Channel %d \n',zerochan);
         
-        %CHI: If there is a zero activity channel that is not ref (because dead)
-        %remove from calculation of spectrum and add directly to rejected
-        %electrodes
+        % CHI *********************************
         if zerochan > 1
            not_Ref = find(zerochan ~= 93);
            dead_elec = zerochan(not_Ref);
+           
+           %Make sure that they are excluded from computation by setting
+           %data values to actual 0
+           EEG2 = EEG;
+           dummy = zeros(numel(dead_elec),size(EEG2.data,2), size(EEG2.data,3));
+           EEG2.data(dead_elec,:,:) = dummy;
+           
         else
+           EEG2 = EEG;
            dead_elec = [];
         end
         %CHI***********
         
         electrodes = setdiff(1:EEG.nbchan,zerochan);
-        [EEG, indelec, ~, ~] = priv_rejchan(EEG,'elec',electrodes , 'dead', dead_elec,'threshold',[-3.5 3.5],'norm','on','measure','spec' ,'freqrange',[1 48]);
+        [EEG, indelec, ~, ~] = priv_rejchan(EEG2,'elec',electrodes , 'threshold',[-3.5 3.5],'norm','on','measure','spec' ,'freqrange',[1 48]);
         EEG.reject.rejchan = [indelec dead_elec]; %CHI
 
         % inter
