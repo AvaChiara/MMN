@@ -90,6 +90,13 @@ pop_saveset(EEG, [pru_dir filesep filename '.set'])
 
 for i = 1:length(basenames)
     EEG = pop_loadset([pru_dir filesep basenames{i} '_pru.set']);
+    
+    %Reintroduce information on rejected channels if lost during ICA
+    %correction step
+    EEGrej = pop_loadset([basenames{i} '_rej.set']); %load file that has rejected channels info
+    EEG.reject.rejchan = EEGrej.reject.rejchan; %reintroduce rejected channels info into ICA corrected file
+    clear EEGrej
+    
     EEG = robust_locdetrend(EEG,'yes');
     pop_saveset(EEG, 'filepath', det_dir, 'filename', [basenames{i} '_det.set']);
 end
