@@ -142,8 +142,9 @@ else
     if ~isempty(opt.dead) %zero channels because dead channels
         temp_measure = nan(EEG.nbchan,size(measure,2));
         temp_measure(opt.elec,:) = measure;
+        measure = temp_measure(opt.elec,:); % selecting channels
     end
-    measure = temp_measure(opt.elec,:); % selecting channels
+    
     %*********
     
     % select frequency range
